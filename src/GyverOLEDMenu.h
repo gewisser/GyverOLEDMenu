@@ -18,11 +18,10 @@
 #define MENU_ITEM_PADDING_TOP 2
 #define MENU_PAGE_ITEMS_COUNT 6
 #define MENU_FAST_K 4
-#define MENU_BOOLEAN_TRUE "On"
-#define MENU_BOOLEAN_FALSE "Off"
-
 
 typedef void (*cbOnChange)(int index, void* val, int valType);
+
+const char* MENU_BOOLEAN_TEXT[]  = { "Off", "On" };
 
 template< typename TGyverOLED >
 class OledMenuItem {
@@ -81,7 +80,7 @@ public:
           _oled->print(*(double*)_val);
           break;
         case VAL_BOOLEAN:
-          _oled->print(*(boolean*)_val ? MENU_BOOLEAN_TRUE: MENU_BOOLEAN_FALSE);
+          _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
           break;
       }
     }
@@ -142,7 +141,7 @@ public:
 
       case VAL_BOOLEAN:
         *(boolean*)_val = !*(boolean*)_val;
-        _oled->print(*(boolean*)_val ? MENU_BOOLEAN_TRUE: MENU_BOOLEAN_FALSE);
+        _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
         break;
     }
 
@@ -177,7 +176,7 @@ public:
 
       case VAL_BOOLEAN:
         *(boolean*)_val = !*(boolean*)_val;
-        _oled->print(*(boolean*)_val ? "On": "Off");
+        _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
         break;
     }
 
