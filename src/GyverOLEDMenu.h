@@ -33,7 +33,7 @@ public:
 
   OledMenuItem() {}
 
-  void setParams(int index, const char* str, byte valType, void* inc, void* val, boolean _isSelect = false) {
+  void setParams(int index, const char* str, byte valType, void* inc, void* val) {
     isInit = true;
 
     _index = index;
@@ -41,12 +41,11 @@ public:
     _valType = valType;
     _inc = inc;
     _val = val;
-    isSelect = _isSelect;
   }
 
   void setPosition(int x, int y) {
     _x = x;
-    _y = y; 
+    _y = y;
   }
 
   void setOledInstance(TGyverOLED* oled) {
@@ -64,7 +63,7 @@ public:
 
     _oled->setCursorXY(_x + MENU_ITEM_PADDING_LEFT, _y + MENU_ITEM_PADDING_TOP);
     _oled->print(_str);
-    
+
     if (_valType != VAL_ACTION) {
       _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _y + MENU_ITEM_PADDING_TOP);
 
@@ -77,10 +76,10 @@ public:
           break;
         case VAL_FLOAT:
           _oled->print(*(float*)_val);
-          break;         
+          break;
         case VAL_DOUBLE:
           _oled->print(*(double*)_val);
-          break;               
+          break;
         case VAL_BOOLEAN:
           _oled->print(*(boolean*)_val ? MENU_BOOLEAN_TRUE: MENU_BOOLEAN_FALSE);
           break;
@@ -109,16 +108,16 @@ public:
 
       return;
     }
-    
+
     isChange = !isChange;
 
     drawItem(true);
 
     if (!cbImmediate && !isChange) {
       callCb();
-    }    
+    }
   }
- 
+
   void increment(boolean isFast = false) {
     if (_valType == VAL_ACTION) {
       return;
@@ -135,11 +134,11 @@ public:
       case VAL_FLOAT:
         *(float*)_val = *(float*)_val + (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc);
         _oled->print(*(float*)_val);
-        break;  
+        break;
       case VAL_DOUBLE:
         *(double*)_val = *(double*)_val + (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc);
         _oled->print(*(double*)_val);
-        break;               
+        break;
 
       case VAL_BOOLEAN:
         *(boolean*)_val = !*(boolean*)_val;
@@ -170,11 +169,11 @@ public:
       case VAL_DOUBLE:
         *(double*)_val = *(double*)_val - (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc);
         _oled->print(*(double*)_val);
-        break;           
+        break;
       case VAL_FLOAT:
         *(float*)_val = *(float*)_val - (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc);
         _oled->print(*(float*)_val);
-        break;     
+        break;
 
       case VAL_BOOLEAN:
         *(boolean*)_val = !*(boolean*)_val;
@@ -183,7 +182,7 @@ public:
     }
 
     _oled->update();
-    
+
     if (cbImmediate) {
       callCb();
     }
@@ -217,10 +216,10 @@ private:
   void prepareValUpdate() {
     _oled->rect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y + MENU_SELECTED_H, OLED_CLEAR);
     _oled->roundRect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y + MENU_SELECTED_H, OLED_STROKE);
-    
+
     _oled->textMode(BUF_ADD);
-    _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _y + MENU_ITEM_PADDING_TOP);    
-  }  
+    _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _y + MENU_ITEM_PADDING_TOP);
+  }
 };
 
 // =================================================================================================================================
@@ -236,7 +235,7 @@ public:
   OledMenu(TGyverOLED* oled): _oled(oled)  {}
 
   // val
-  
+
   void addItem(const char* str) {
     doAddItem(str, VAL_ACTION, nullptr, nullptr);
   }
@@ -247,11 +246,11 @@ public:
 
   void addItem(const char* str, double inc, double val) {
     doAddItem(str, VAL_DOUBLE, &inc, &val);
-  }  
+  }
 
   void addItem(const char* str, float inc, float val) {
     doAddItem(str, VAL_FLOAT, &inc, &val);
-  }    
+  }
 
   void addItem(const char* str, byte inc, byte val) {
     doAddItem(str, VAL_BYTE, &inc, &val);
@@ -269,11 +268,11 @@ public:
 
   void addItem(const char* str, double inc, double* val) {
     doAddItem(str, VAL_DOUBLE, &inc, val);
-  }  
+  }
 
   void addItem(const char* str, float inc, float* val) {
     doAddItem(str, VAL_FLOAT, &inc, val);
-  }    
+  }
 
   void addItem(const char* str, byte inc, byte* val) {
     doAddItem(str, VAL_BYTE, &inc, val);
@@ -281,7 +280,7 @@ public:
 
   void addItem(const char* str, boolean* val) {
     doAddItem(str, VAL_BOOLEAN, nullptr, val);
-  }  
+  }
 
   void selectNext(boolean isFast = false) {
     if (!isMenuShowing) {
@@ -302,14 +301,14 @@ public:
 
     int nextIndex = selectedIdx + 1;
 
-   
+
     oledMenuItems[selectedIdx].unselect();
-    
+
     if (!indexInCurrentPage(nextIndex)) {
       renderPage(currentPage + 1);
       return;
     }
-    
+
     oledMenuItems[nextIndex].select(true);
   }
 
@@ -351,7 +350,7 @@ public:
 
     if (selectedIdx == -1) {
       return;
-    }  
+    }
 
     oledMenuItems[selectedIdx].toggleChange();
   }
@@ -365,25 +364,23 @@ public:
     if (val == isMenuShowing) {
       return;
     }
-    
+
     isMenuShowing = val;
 
     if (isMenuShowing) {
-      if (update) {
-        _oled->update();
-      } 
+      renderPage(currentPage);
     } else {
       _oled->clear();
       if (update) {
         _oled->update();
-      }       
+      }
     }
   }
 
 
 private:
   TGyverOLED* _oled;
-  int initInterator = 0; 
+  int initInterator = 0;
   OledMenuItem<TGyverOLED> oledMenuItems[_MS_SIZE];
   cbOnChange _onItemChange = nullptr;
 
@@ -405,7 +402,7 @@ private:
     }
 
     return -1;
-  } 
+  }
 
   void doAddItem(const char* str, byte valType, void* inc, void* val) {
     if (!(initInterator < _MS_SIZE)) {
@@ -413,13 +410,7 @@ private:
     }
 
     oledMenuItems[initInterator].setOledInstance(_oled);
-    oledMenuItems[initInterator].setParams(initInterator, str, valType, inc, val, initInterator == 0);
-
-    if (initInterator < MENU_PAGE_ITEMS_COUNT) {
-      oledMenuItems[initInterator].setPosition(0, initInterator * 10);
-      oledMenuItems[initInterator].drawItem();
-    }
-
+    oledMenuItems[initInterator].setParams(initInterator, str, valType, inc, val);
     oledMenuItems[initInterator].onChange(_onItemChange, cbImmediate);
 
     initInterator++;
@@ -437,7 +428,7 @@ private:
     if (page < 1) {
       return;
     }
-    
+
     _oled->clear();
 
     int maxInPage = page * MENU_PAGE_ITEMS_COUNT;
@@ -449,19 +440,19 @@ private:
 
     for (int i = minInPage; i < maxInPage; i++) {
       oledMenuItems[i].setPosition(0, ordinalInc * 10);
-      //oledMenuItems[initInterator].onChange(_onItemChange);
-      oledMenuItems[i].drawItem();
 
       if (firstSelect && ordinalInc == 0) {
         oledMenuItems[i].select();
       }
+
+      oledMenuItems[i].drawItem();
 
       ordinalInc++;
     }
 
     if (!firstSelect) {
       oledMenuItems[maxInPage - 1].select();
-    }  
+    }
 
     currentPage = page;
 
