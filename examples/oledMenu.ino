@@ -17,7 +17,18 @@ GyverOLED<SSH1106_128x64> oled;
 
 OledMenu<9, GyverOLED<SSH1106_128x64>> menu(&oled);
 
-int d_k = 50;
+int d_p = 10;
+int d_i = 1000;
+int d_d = 50;
+float tt1 = 0.5;
+int tt11 = 1000;
+boolean lgh = false;
+int tt3 = 1000;
+int tt4 = 1000;
+
+int inc1 = 1;
+float inc_f = 0.01;
+
 
 void setup() {
 #ifdef DEBUG_ENABLE
@@ -31,16 +42,16 @@ void setup() {
 
   menu.onChange(onItemChange, true);
 
-  menu.addItem("<- ВЫХОД"); // 0
-  menu.addItem("КОЭФ. P", 1, 10);
-  menu.addItem("КОЭФ. I", 1, 1000);
-  menu.addItem("КОЭФ. D", 1, &d_k); // 3
-  menu.addItem("ВРЕМЯ ОПР.", 0.01, 0.5);
-  menu.addItem("TIMER 1", 1, 1000); // 5 
+  menu.addItem(PSTR("<- ВЫХОД")); // 0
+  menu.addItem(PSTR("КОЭФ. P"), &inc1, &d_p);
+  menu.addItem(PSTR("КОЭФ. I"), &inc1, &d_i);
+  menu.addItem(PSTR("КОЭФ. D"), &inc1, &d_d); // 3
+  menu.addItem(PSTR("ВРЕМЯ ОПР."), &inc_f, &tt1);
+  menu.addItem(PSTR("TIMER 1"), &inc1, &tt11); // 5
 
-  menu.addItem("ПОДСВЕТКА", false); // page 2
-  menu.addItem("TIMER 3", 1, 1000);
-  menu.addItem("TIMER 4", 1, 1000);  
+  menu.addItem(PSTR("ПОДСВЕТКА"), &lgh); // page 2
+  menu.addItem(PSTR("TIMER 3"), &inc1, &tt3);
+  menu.addItem(PSTR("TIMER 4"), &inc1, &tt4);
 
   menu.showMenu(true);
 
@@ -51,13 +62,13 @@ void setup() {
 void onItemChange(int index, void* val, int valType) {
   if (index == 3) {
     DEBUG(d_k);
-  }  
+  }
 
   if (valType == VAL_ACTION) {
     if (index == 0) {
       menu.showMenu(false);
     }
-  }  
+  }
 }
 
 
@@ -74,7 +85,7 @@ void cb() {
 
     case EB_CLICK:
       menu.toggleChangeSelected();
-      break;      
+      break;
   }
 }
 

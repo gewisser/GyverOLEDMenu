@@ -1,8 +1,6 @@
 #ifndef GyverOLEDMenu_h
 #define GyverOLEDMenu_h
 
-#include <GyverOLED.h>
-
 #define VAL_ACTION 0
 #define VAL_INTEGER 1
 #define VAL_FLOAT 2
@@ -26,16 +24,12 @@ const char* MENU_BOOLEAN_TEXT[]  = { "Off", "On" };
 template< typename TGyverOLED >
 class OledMenuItem {
 public:
-  boolean isInit = false;
   boolean isSelect = false;
   boolean isChange = false;
 
   OledMenuItem() {}
 
-  void setParams(int index, const char* str, byte valType, void* inc, void* val) {
-    isInit = true;
-
-    _index = index;
+  void setParams(const void* str, void* inc, void* val, byte valType) {
     _str = str;
     _valType = valType;
     _inc = inc;
@@ -45,33 +39,38 @@ public:
   void setPosition(int x, int y) {
     _x = x;
     _y = y;
+    _y1 = _y + MENU_SELECTED_H;
+    _text_y = _y + MENU_ITEM_PADDING_TOP;
   }
 
-  void setOledInstance(TGyverOLED* oled) {
+  void setOledInstance(TGyverOLED* oled, int index) {
+    _index = index;
     _oled = oled;
   }
 
   void drawItem(boolean update = false) {
-    _oled->rect(_x, _y, MENU_ITEM_SELECT_W, _y + MENU_SELECTED_H, (isSelect && !isChange) ? OLED_FILL : OLED_CLEAR);
+    _oled->rect(_x, _y, MENU_ITEM_SELECT_W, _y1, (isSelect && !isChange) ? OLED_FILL : OLED_CLEAR);
 
     if (isChange) {
-      _oled->roundRect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y + MENU_SELECTED_H, OLED_STROKE);
+      _oled->roundRect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y1, OLED_STROKE);
     }
 
     _oled->textMode((isSelect && !isChange) ? BUF_SUBTRACT : BUF_ADD);
 
-    _oled->setCursorXY(_x + MENU_ITEM_PADDING_LEFT, _y + MENU_ITEM_PADDING_TOP);
-    _oled->print(_str);
+    _oled->setCursorXY(_x + MENU_ITEM_PADDING_LEFT, _text_y);
+
+    _oled->print((const __FlashStringHelper*)_str);
+
 
     if (_valType != VAL_ACTION) {
-      _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _y + MENU_ITEM_PADDING_TOP);
+      _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _text_y);
 
       switch (_valType) {
         case VAL_INTEGER:
           _oled->print(*(int*)_val);
           break;
         case VAL_BYTE:
-          _oled->print(*(int*)_val);
+          _oled->print(*(byte*)_val);
           break;
         case VAL_FLOAT:
           _oled->print(*(float*)_val);
@@ -126,9 +125,12 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-      case VAL_BYTE:
         *(int*)_val = *(int*)_val + (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc);
         _oled->print(*(int*)_val);
+        break;
+      case VAL_BYTE:
+        *(byte*)_val = *(byte*)_val + (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc);
+        _oled->print(*(byte*)_val);
         break;
       case VAL_FLOAT:
         *(float*)_val = *(float*)_val + (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc);
@@ -161,9 +163,12 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-      case VAL_BYTE:
         *(int*)_val = *(int*)_val - (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc);
         _oled->print(*(int*)_val);
+        break;
+      case VAL_BYTE:
+        *(byte*)_val = *(byte*)_val - (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc);
+        _oled->print(*(byte*)_val);
         break;
       case VAL_DOUBLE:
         *(double*)_val = *(double*)_val - (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc);
@@ -202,10 +207,12 @@ public:
 
 private:
   TGyverOLED* _oled = nullptr;
-  int _index;
-  const char* _str;
+  int _index = 0;
+  const void* _str = nullptr;
   int _x;
   int _y;
+  int _y1;
+  int _text_y;
   byte _valType;
   void* _inc = nullptr;
   void* _val = nullptr;
@@ -213,11 +220,11 @@ private:
   boolean cbImmediate = false;
 
   void prepareValUpdate() {
-    _oled->rect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y + MENU_SELECTED_H, OLED_CLEAR);
-    _oled->roundRect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y + MENU_SELECTED_H, OLED_STROKE);
+    _oled->rect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y1, OLED_CLEAR);
+    _oled->roundRect(MENU_PARAMS_LEFT_OFFSET - 4, _y, MENU_ITEM_SELECT_W, _y1, OLED_STROKE);
 
     _oled->textMode(BUF_ADD);
-    _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _y + MENU_ITEM_PADDING_TOP);
+    _oled->setCursorXY(MENU_PARAMS_LEFT_OFFSET, _text_y);
   }
 };
 
@@ -231,53 +238,31 @@ public:
   boolean isMenuShowing = false;
   boolean cbImmediate = false;
 
-  OledMenu(TGyverOLED* oled): _oled(oled)  {}
+  OledMenu(const TGyverOLED* oled): _oled((TGyverOLED*)oled)  {}
 
   // val
 
-  void addItem(const char* str) {
+  void addItem(PGM_P str) {
     doAddItem(str, VAL_ACTION, nullptr, nullptr);
   }
 
-  void addItem(const char* str, int inc, int val) {
-    doAddItem(str, VAL_INTEGER, &inc, &val);
+  void addItem(PGM_P str, int* inc, int* val) {
+    doAddItem(str, VAL_INTEGER, inc, val);
   }
 
-  void addItem(const char* str, double inc, double val) {
-    doAddItem(str, VAL_DOUBLE, &inc, &val);
+  void addItem(PGM_P str, double* inc, double* val) {
+    doAddItem(str, VAL_DOUBLE, inc, val);
   }
 
-  void addItem(const char* str, float inc, float val) {
-    doAddItem(str, VAL_FLOAT, &inc, &val);
+  void addItem(PGM_P str, float* inc, float* val) {
+    doAddItem(str, VAL_FLOAT, inc, val);
   }
 
-  void addItem(const char* str, byte inc, byte val) {
-    doAddItem(str, VAL_BYTE, &inc, &val);
+  void addItem(PGM_P str, byte* inc, byte* val) {
+    doAddItem(str, VAL_BYTE, inc, val);
   }
 
-  void addItem(const char* str, boolean val) {
-    doAddItem(str, VAL_BOOLEAN, nullptr, &val);
-  }
-
-  // pt
-
-  void addItem(const char* str, int inc, int* val) {
-    doAddItem(str, VAL_INTEGER, &inc, val);
-  }
-
-  void addItem(const char* str, double inc, double* val) {
-    doAddItem(str, VAL_DOUBLE, &inc, val);
-  }
-
-  void addItem(const char* str, float inc, float* val) {
-    doAddItem(str, VAL_FLOAT, &inc, val);
-  }
-
-  void addItem(const char* str, byte inc, byte* val) {
-    doAddItem(str, VAL_BYTE, &inc, val);
-  }
-
-  void addItem(const char* str, boolean* val) {
+  void addItem(PGM_P str, boolean* val) {
     doAddItem(str, VAL_BOOLEAN, nullptr, val);
   }
 
@@ -288,7 +273,7 @@ public:
 
     int selectedIdx = getSelectedItemIndex();
 
-    if (selectedIdx == -1 || selectedIdx == (_MS_SIZE - 1)) {
+    if (selectedIdx == -1) {
       return;
     }
 
@@ -297,6 +282,9 @@ public:
       return;
     }
 
+    if (selectedIdx == (_MS_SIZE - 1)) {
+      return;
+    }
 
     int nextIndex = selectedIdx + 1;
 
@@ -319,7 +307,7 @@ public:
 
     int selectedIdx = getSelectedItemIndex();
 
-    if (selectedIdx < 1) {
+    if (selectedIdx == -1) {
       return;
     }
 
@@ -327,6 +315,11 @@ public:
       oledMenuItems[selectedIdx].decrement(isFast);
       return;
     }
+
+    if (selectedIdx < 1) {
+      return;
+    }
+
 
     int nextIndex = selectedIdx - 1;
 
@@ -378,7 +371,7 @@ public:
 
 
 private:
-  TGyverOLED* _oled;
+  TGyverOLED* _oled = nullptr;
   int initInterator = 0;
   OledMenuItem<TGyverOLED> oledMenuItems[_MS_SIZE];
   cbOnChange _onItemChange = nullptr;
@@ -403,13 +396,13 @@ private:
     return -1;
   }
 
-  void doAddItem(const char* str, byte valType, void* inc, void* val) {
+  void doAddItem(const void* str, byte valType, void* inc, void* val) {
     if (!(initInterator < _MS_SIZE)) {
       return;
     }
 
-    oledMenuItems[initInterator].setOledInstance(_oled);
-    oledMenuItems[initInterator].setParams(initInterator, str, valType, inc, val);
+    oledMenuItems[initInterator].setOledInstance(_oled, initInterator);
+    oledMenuItems[initInterator].setParams(str, inc, val, valType);
     oledMenuItems[initInterator].onChange(_onItemChange, cbImmediate);
 
     initInterator++;
