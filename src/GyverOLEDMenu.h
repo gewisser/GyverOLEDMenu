@@ -8,14 +8,27 @@
 #define VAL_BYTE 4
 #define VAL_BOOLEAN 5
 
+#ifndef MENU_SELECTED_H
 #define MENU_SELECTED_H 10
+#endif
+
 #define MENU_ITEM_SELECT_W 127
 
-#define MENU_PARAMS_LEFT_OFFSET 100
+#ifndef MENU_PARAMS_LEFT_OFFSET
+#define MENU_PARAMS_LEFT_OFFSET 92
+#endif
+
 #define MENU_ITEM_PADDING_LEFT 2
 #define MENU_ITEM_PADDING_TOP 2
+
+#ifndef MENU_PAGE_ITEMS_COUNT
 #define MENU_PAGE_ITEMS_COUNT 6
+#endif
+
+#ifndef MENU_FAST_K
 #define MENU_FAST_K 4
+#endif
+
 
 typedef void (*cbOnChange)(int index, void* val, int valType);
 
@@ -29,7 +42,7 @@ public:
 
   OledMenuItem() {}
 
-  void setParams(const void* str, void* inc, void* val, byte valType) {
+  void setParams(const void* str, const void* inc, void* val, byte valType) {
     _str = str;
     _valType = valType;
     _inc = inc;
@@ -116,6 +129,11 @@ public:
     }
   }
 
+  void setMinMax(const void* min, const void* max) {
+    _min = min;
+    _max = max;
+  }
+
   void increment(boolean isFast = false) {
     if (_valType == VAL_ACTION) {
       return;
@@ -125,22 +143,24 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-        *(int*)_val = *(int*)_val + (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc);
+        *(int*)_val = constrain(*(int*)_val + (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc), *(int*)_min, *(int*)_max);
         _oled->print(*(int*)_val);
         break;
+
       case VAL_BYTE:
-        *(byte*)_val = *(byte*)_val + (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc);
+        *(byte*)_val = constrain(*(byte*)_val + (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc), *(byte*)_min, *(byte*)_max);
         _oled->print(*(byte*)_val);
         break;
-      case VAL_FLOAT:
-        *(float*)_val = *(float*)_val + (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc);
-        _oled->print(*(float*)_val);
-        break;
+
       case VAL_DOUBLE:
-        *(double*)_val = *(double*)_val + (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc);
+        *(double*)_val = constrain(*(double*)_val + (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc), *(double*)_min, *(double*)_max);
         _oled->print(*(double*)_val);
         break;
 
+      case VAL_FLOAT:
+        *(float*)_val = constrain(*(float*)_val + (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc), *(float*)_min, *(float*)_max);
+        _oled->print(*(float*)_val);
+        break;
       case VAL_BOOLEAN:
         *(boolean*)_val = !*(boolean*)_val;
         _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
@@ -163,19 +183,23 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-        *(int*)_val = *(int*)_val - (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc);
+
+        *(int*)_val = constrain(*(int*)_val - (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc), *(int*)_min, *(int*)_max);
         _oled->print(*(int*)_val);
         break;
+
       case VAL_BYTE:
-        *(byte*)_val = *(byte*)_val - (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc);
+        *(byte*)_val = constrain(*(byte*)_val - (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc), *(byte*)_min, *(byte*)_max);
         _oled->print(*(byte*)_val);
         break;
+
       case VAL_DOUBLE:
-        *(double*)_val = *(double*)_val - (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc);
+        *(double*)_val = constrain(*(double*)_val - (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc), *(double*)_min, *(double*)_max);
         _oled->print(*(double*)_val);
         break;
+
       case VAL_FLOAT:
-        *(float*)_val = *(float*)_val - (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc);
+        *(float*)_val = constrain(*(float*)_val - (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc), *(float*)_min, *(float*)_max);
         _oled->print(*(float*)_val);
         break;
 
@@ -214,7 +238,9 @@ private:
   int _y1;
   int _text_y;
   byte _valType;
-  void* _inc = nullptr;
+  const void* _inc = nullptr;
+  const void* _min = nullptr;
+  const void* _max = nullptr;
   void* _val = nullptr;
   cbOnChange _onChange = nullptr;
   boolean cbImmediate = false;
@@ -243,28 +269,29 @@ public:
   // val
 
   void addItem(PGM_P str) {
-    doAddItem(str, VAL_ACTION, nullptr, nullptr);
+    doAddItem(str, VAL_ACTION, nullptr, nullptr, nullptr, nullptr);
   }
 
-  void addItem(PGM_P str, int* inc, int* val) {
-    doAddItem(str, VAL_INTEGER, inc, val);
+  void addItem(PGM_P str, const int* inc, int* val, const int min, const int max) {
+    doAddItem(str, VAL_INTEGER, inc, val, &min, &max);
   }
 
-  void addItem(PGM_P str, double* inc, double* val) {
-    doAddItem(str, VAL_DOUBLE, inc, val);
+  void addItem(PGM_P str, const double* inc, double* val, const double min, const double max) {
+    doAddItem(str, VAL_DOUBLE, inc, val, &min, &max);
   }
 
-  void addItem(PGM_P str, float* inc, float* val) {
-    doAddItem(str, VAL_FLOAT, inc, val);
+  void addItem(PGM_P str, const float* inc, float* val, const float min, const float max) {
+    doAddItem(str, VAL_FLOAT, inc, val, &min, &max);
   }
 
-  void addItem(PGM_P str, byte* inc, byte* val) {
-    doAddItem(str, VAL_BYTE, inc, val);
+  void addItem(PGM_P str, const byte* inc, byte* val, const byte min, const byte max) {
+    doAddItem(str, VAL_BYTE, inc, val, &min, &max);
   }
 
   void addItem(PGM_P str, boolean* val) {
-    doAddItem(str, VAL_BOOLEAN, nullptr, val);
+    doAddItem(str, VAL_BOOLEAN, nullptr, val, nullptr, nullptr);
   }
+
 
   void selectNext(boolean isFast = false) {
     if (!isMenuShowing) {
@@ -369,6 +396,10 @@ public:
     }
   }
 
+  void refresh() {
+    renderPage(currentPage);
+  }
+
 
 private:
   TGyverOLED* _oled = nullptr;
@@ -396,7 +427,7 @@ private:
     return -1;
   }
 
-  void doAddItem(const void* str, byte valType, void* inc, void* val) {
+  void doAddItem(const void* str, byte valType, const void* inc, void* val, const void* min, const void* max) {
     if (!(initInterator < _MS_SIZE)) {
       return;
     }
@@ -404,6 +435,7 @@ private:
     oledMenuItems[initInterator].setOledInstance(_oled, initInterator);
     oledMenuItems[initInterator].setParams(str, inc, val, valType);
     oledMenuItems[initInterator].onChange(_onItemChange, cbImmediate);
+    oledMenuItems[initInterator].setMinMax(min, max);
 
     initInterator++;
   }
@@ -430,10 +462,12 @@ private:
 
     int ordinalInc = 0;
 
+    boolean selectedExist = getSelectedItemIndex() != -1;
+
     for (int i = minInPage; i < maxInPage; i++) {
       oledMenuItems[i].setPosition(0, ordinalInc * 10);
 
-      if (firstSelect && ordinalInc == 0) {
+      if (!selectedExist && (firstSelect && ordinalInc == 0)) {
         oledMenuItems[i].select();
       }
 
@@ -442,7 +476,7 @@ private:
       ordinalInc++;
     }
 
-    if (!firstSelect) {
+    if (!selectedExist && !firstSelect) {
       oledMenuItems[maxInPage - 1].select();
     }
 

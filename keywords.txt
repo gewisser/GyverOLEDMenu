@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map For GyverOLEDMenu
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+OledMenu	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+addItem	KEYWORD2
+showMenu	KEYWORD2
+refresh	KEYWORD2
+selectNext	KEYWORD2
+selectPrev  KEYWORD2
+toggleChangeSelected	KEYWORD2
+onChange	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+MENU_SELECTED_H LITERAL1
+MENU_PARAMS_LEFT_OFFSET LITERAL1
+MENU_PAGE_ITEMS_COUNT LITERAL1
+MENU_FAST_K LITERAL1
