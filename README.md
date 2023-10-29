@@ -69,6 +69,7 @@ byte menu.currentPage = 1; // Текущая страница
 */
 void menu.addItem(PGM_P str); // Добавит экшен (просто кликабельный item)
 void menu.addItem(PGM_P str, const int* inc, int* val, const int min, const int max);
+void menu.addItem(PGM_P str, const unsigned int* inc, unsigned int* val, const unsigned int min, const unsigned int max);
 void menu.addItem(PGM_P str, const double* inc, double* val, const double min, const double max);
 void menu.addItem(PGM_P str, const float* inc, float* val, const float min, const float max);
 void menu.addItem(PGM_P str, const byte* inc, byte* val, const byte min, const byte max);
@@ -127,6 +128,7 @@ void menu.toggleChangeSelected();
     #define VAL_DOUBLE 3
     #define VAL_BYTE 4
     #define VAL_BOOLEAN 5
+    #define VAL_U_INTEGER 6
 */
 typedef void (*cbOnChange)(int index, void* val, int valType);
 

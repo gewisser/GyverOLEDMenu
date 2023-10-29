@@ -7,6 +7,8 @@
 #define VAL_DOUBLE 3
 #define VAL_BYTE 4
 #define VAL_BOOLEAN 5
+#define VAL_U_INTEGER 6
+
 
 #ifndef MENU_SELECTED_H
 #define MENU_SELECTED_H 10
@@ -82,6 +84,9 @@ public:
         case VAL_INTEGER:
           _oled->print(*(int*)_val);
           break;
+        case VAL_U_INTEGER:
+          _oled->print(*(unsigned int*)_val);
+          break;
         case VAL_BYTE:
           _oled->print(*(byte*)_val);
           break;
@@ -147,6 +152,11 @@ public:
         _oled->print(*(int*)_val);
         break;
 
+      case VAL_U_INTEGER:
+        *(unsigned int*)_val = constrain(*(unsigned int*)_val + (isFast ? ((*(unsigned int*)_inc) * MENU_FAST_K) : *(unsigned int*)_inc), *(unsigned int*)_min, *(unsigned int*)_max);
+        _oled->print(*(unsigned int*)_val);
+        break;
+
       case VAL_BYTE:
         *(byte*)_val = constrain(*(byte*)_val + (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc), *(byte*)_min, *(byte*)_max);
         _oled->print(*(byte*)_val);
@@ -186,6 +196,11 @@ public:
 
         *(int*)_val = constrain(*(int*)_val - (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc), *(int*)_min, *(int*)_max);
         _oled->print(*(int*)_val);
+        break;
+
+      case VAL_U_INTEGER:
+        *(unsigned int*)_val = constrain(*(unsigned int*)_val - (isFast ? ((*(unsigned int*)_inc) * MENU_FAST_K) : *(unsigned int*)_inc), *(unsigned int*)_min, *(unsigned int*)_max);
+        _oled->print(*(unsigned int*)_val);
         break;
 
       case VAL_BYTE:
@@ -274,6 +289,10 @@ public:
 
   void addItem(PGM_P str, const int* inc, int* val, const int min, const int max) {
     doAddItem(str, VAL_INTEGER, inc, val, &min, &max);
+  }
+
+  void addItem(PGM_P str, const unsigned int* inc, unsigned int* val, const unsigned int min, const unsigned int max) {
+    doAddItem(str, VAL_U_INTEGER, inc, val, &min, &max);
   }
 
   void addItem(PGM_P str, const double* inc, double* val, const double min, const double max) {
