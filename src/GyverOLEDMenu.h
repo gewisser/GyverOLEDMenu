@@ -1,6 +1,12 @@
 #ifndef GyverOLEDMenu_h
 #define GyverOLEDMenu_h
 
+#define GM_N_INT(x) (__extension__({static const int __m_d_i = (x); &__m_d_i;}))
+#define GM_N_U_INT(x) (__extension__({static const unsigned int __m_d_u_i = (x); &__m_d_u_i;}))
+#define GM_N_FLOAT(x) (__extension__({static const float __m_d_f = (x); &__m_d_f;}))
+#define GM_N_DOUBLE(x) (__extension__({static const double __m_d_d = (x); &__m_d_d;}))
+#define GM_N_BYTE(x) (__extension__({static const byte __m_d_b = (x); &__m_d_b;}))
+
 #define VAL_ACTION 0
 #define VAL_INTEGER 1
 #define VAL_FLOAT 2
@@ -32,7 +38,7 @@
 #endif
 
 
-typedef void (*cbOnChange)(int index, void* val, int valType);
+typedef void (*cbOnChange)(int index, void* val, byte valType);
 
 const char* MENU_BOOLEAN_TEXT[]  = { "Off", "On" };
 
@@ -193,7 +199,6 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-
         *(int*)_val = constrain(*(int*)_val - (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc), *(int*)_min, *(int*)_max);
         _oled->print(*(int*)_val);
         break;
@@ -287,24 +292,24 @@ public:
     doAddItem(str, VAL_ACTION, nullptr, nullptr, nullptr, nullptr);
   }
 
-  void addItem(PGM_P str, const int* inc, int* val, const int min, const int max) {
-    doAddItem(str, VAL_INTEGER, inc, val, &min, &max);
+  void addItem(PGM_P str, const int* inc, int* val, const int* min, const int* max) {
+    doAddItem(str, VAL_INTEGER, inc, val, min, max);
   }
 
-  void addItem(PGM_P str, const unsigned int* inc, unsigned int* val, const unsigned int min, const unsigned int max) {
-    doAddItem(str, VAL_U_INTEGER, inc, val, &min, &max);
+  void addItem(PGM_P str, const unsigned int* inc, unsigned int* val, const unsigned int* min, const unsigned int* max) {
+    doAddItem(str, VAL_U_INTEGER, inc, val, min, max);
   }
 
-  void addItem(PGM_P str, const double* inc, double* val, const double min, const double max) {
-    doAddItem(str, VAL_DOUBLE, inc, val, &min, &max);
+  void addItem(PGM_P str, const double* inc, double* val, const double* min, const double* max) {
+    doAddItem(str, VAL_DOUBLE, inc, val, min, max);
   }
 
-  void addItem(PGM_P str, const float* inc, float* val, const float min, const float max) {
-    doAddItem(str, VAL_FLOAT, inc, val, &min, &max);
+  void addItem(PGM_P str, const float* inc, float* val, const float* min, const float* max) {
+    doAddItem(str, VAL_FLOAT, inc, val, min, max);
   }
 
-  void addItem(PGM_P str, const byte* inc, byte* val, const byte min, const byte max) {
-    doAddItem(str, VAL_BYTE, inc, val, &min, &max);
+  void addItem(PGM_P str, const byte* inc, byte* val, const byte* min, const byte* max) {
+    doAddItem(str, VAL_BYTE, inc, val, min, max);
   }
 
   void addItem(PGM_P str, boolean* val) {

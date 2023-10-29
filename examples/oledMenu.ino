@@ -4,7 +4,7 @@
 #include <EncButton.h>
 #include "GyverOLEDMenu.h"
 
-EncButton eb(3, 4, 2, INPUT_PULLUP);
+EncButton eb(6, 7, 5, INPUT_PULLUP);
 GyverOLED<SSH1106_128x64> oled;
 
 OledMenu<9, GyverOLED<SSH1106_128x64>> menu(&oled);
@@ -12,15 +12,11 @@ OledMenu<9, GyverOLED<SSH1106_128x64>> menu(&oled);
 int d_p = 10;
 int d_i = 1000;
 int d_d = 50;
-int tt11 = 1000;
+byte tt11 = 10;
 float tt1 = 0.5;
 boolean lgh = false;
 int tt3 = 1000;
 int tt4 = 1000;
-
-const int inc1 = 1;
-const float inc_f = 0.01;
-
 
 void setup() {
   oled.init();
@@ -31,15 +27,15 @@ void setup() {
   menu.onChange(onItemChange, true);
 
   menu.addItem(PSTR("<- ВЫХОД")); // 0
-  menu.addItem(PSTR("КОЭФ. P"), &inc1, &d_p, 0, 100);
-  menu.addItem(PSTR("КОЭФ. I"), &inc1, &d_i, -5, 20);
-  menu.addItem(PSTR("КОЭФ. D"), &inc1, &d_d, 0, 7000); // 3
-  menu.addItem(PSTR("ВРЕМЯ ОПР."), &inc_f, &tt1, 1, 20);
-  menu.addItem(PSTR("TIMER 1"), &inc1, &tt11, 1, 255); // 5
+  menu.addItem(PSTR("КОЭФ. P"), GM_N_INT(1), &d_p, GM_N_INT(0), GM_N_INT(100));
+  menu.addItem(PSTR("КОЭФ. I"), GM_N_INT(1), &d_i, GM_N_INT(-5), GM_N_INT(20));
+  menu.addItem(PSTR("КОЭФ. D"), GM_N_INT(1), &d_d, GM_N_INT(0), GM_N_INT(7000)); // 3
+  menu.addItem(PSTR("ВРЕМЯ ОПР."), GM_N_FLOAT(0.01), &tt1, GM_N_FLOAT(1), GM_N_FLOAT(20));
+  menu.addItem(PSTR("TIMER 1"), GM_N_BYTE(1), &tt11, GM_N_BYTE(1), GM_N_BYTE(255)); // 5
 
   menu.addItem(PSTR("ПОДСВЕТКА"), &lgh); // page 2
-  menu.addItem(PSTR("TIMER 3"), &inc1, &tt3, 1, 5);
-  menu.addItem(PSTR("TIMER 4"), &inc1, &tt4, 0, 10);
+  menu.addItem(PSTR("TIMER 3"), GM_N_INT(1), &tt3, GM_N_INT(1), GM_N_INT(5));
+  menu.addItem(PSTR("TIMER 4"), GM_N_INT(1), &tt4, GM_N_INT(0), GM_N_INT(10));
 
   menu.showMenu(true);
 
@@ -47,7 +43,7 @@ void setup() {
   eb.attach(cb);
 }
 
-void onItemChange(int index, void* val, int valType) {
+void onItemChange(int index, void* val, byte valType) {
   if (valType == VAL_ACTION) {
     if (index == 0) {
       menu.showMenu(false);
