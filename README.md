@@ -27,6 +27,10 @@ https://github.com/gewisser/GyverOLEDMenu/assets/5417292/46c5d222-9373-4607-a67f
 
 <a id="install"></a>
 ## Установка
+- Библиотеку можно найти по названию **GyverOLEDMenu** и установить через менеджер библиотек в:
+  - Arduino IDE
+  - Arduino IDE v2
+  - PlatformIO
 - [Скачать библиотеку](https://github.com/GyverLibs/GyverOLED/archive/refs/heads/main.zip) .zip архивом для ручной установки:
   - Распаковать и положить в *C:\Program Files (x86)\Arduino\libraries* (Windows x64)
   - Распаковать и положить в *C:\Program Files\Arduino\libraries* (Windows x32)
