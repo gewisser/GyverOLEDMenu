@@ -333,21 +333,7 @@ public:
       return;
     }
 
-    if (selectedIdx == (_MS_SIZE - 1)) {
-      return;
-    }
-
-    int nextIndex = selectedIdx + 1;
-
-
-    oledMenuItems[selectedIdx].unselect();
-
-    if (!indexInCurrentPage(nextIndex)) {
-      renderPage(currentPage + 1);
-      return;
-    }
-
-    oledMenuItems[nextIndex].select(true);
+    gotoIndex(selectedIdx, selectedIdx + 1);
   }
 
 
@@ -367,21 +353,7 @@ public:
       return;
     }
 
-    if (selectedIdx < 1) {
-      return;
-    }
-
-
-    int nextIndex = selectedIdx - 1;
-
-    oledMenuItems[selectedIdx].unselect();
-
-    if (!indexInCurrentPage(nextIndex)) {
-      renderPage(currentPage - 1, false);
-      return;
-    }
-
-    oledMenuItems[nextIndex].select(true);
+    gotoIndex(selectedIdx, selectedIdx - 1);
   }
 
   void toggleChangeSelected() {
@@ -414,6 +386,8 @@ public:
       renderPage(currentPage);
     } else {
       _oled->clear();
+      setDefaultOledParams();
+
       if (update) {
         _oled->update();
       }
@@ -424,6 +398,9 @@ public:
     renderPage(currentPage);
   }
 
+  byte pageCount() {
+    return getPageByIndex(_MS_SIZE);
+  }
 
 private:
   TGyverOLED* _oled = nullptr;
@@ -507,6 +484,46 @@ private:
     currentPage = page;
 
     _oled->update();
+  }
+
+  void gotoIndex(byte selectedIdx, int nextIdx) {
+    byte nextIndexPage = 0;
+    boolean isFirstSelect = true;
+
+    oledMenuItems[selectedIdx].unselect();
+
+    if (nextIdx < 0) {
+      nextIndexPage = pageCount();
+      isFirstSelect = false;
+    } else if (nextIdx > (_MS_SIZE - 1)) {
+      nextIndexPage = 1;
+      isFirstSelect = true;
+    } else {
+      nextIndexPage = getPageByIndex(nextIdx);
+      isFirstSelect = nextIndexPage > currentPage;
+    }
+
+    if (nextIndexPage != currentPage) {
+      renderPage(nextIndexPage, isFirstSelect);
+      return;
+    }
+
+    if (nextIdx < 0) {
+      nextIdx = _MS_SIZE - 1;
+    } else if (nextIdx > (_MS_SIZE - 1)) {
+      nextIdx = 0;
+    }
+
+    oledMenuItems[nextIdx].select(true);
+  }
+
+  byte getPageByIndex(byte index) {
+        // ((index + 1) + MENU_PAGE_ITEMS_COUNT - 1) - one(1) was cut
+    return (index + MENU_PAGE_ITEMS_COUNT) / MENU_PAGE_ITEMS_COUNT;
+  }
+
+  void setDefaultOledParams() {
+    _oled->textMode(BUF_REPLACE); // default in GyverOLED.h
   }
 };
 
