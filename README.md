@@ -104,7 +104,11 @@ void menu.showMenu(boolean val, boolean update = true);
 */
 void menu.refresh();
 
-
+/*
+  pageCount
+  Возвращает количество страниц 
+*/
+byte pageCount(); 
 
 // ===== КУРСОР =====
 

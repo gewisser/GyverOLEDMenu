@@ -399,7 +399,7 @@ public:
   }
 
   byte pageCount() {
-    return getPageByIndex(_MS_SIZE);
+    return getPageByIndex(_MS_SIZE - 1);
   }
 
 private:
