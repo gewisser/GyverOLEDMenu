@@ -46,14 +46,15 @@ https://github.com/gewisser/GyverOLEDMenu/assets/5417292/46c5d222-9373-4607-a67f
 <a id="init"></a>
 ## Инициализация
 ```cpp
-#include <GyverOLED.h>
-#include "GyverOLEDMenu.h"
-
 // дефайны меню которые можно переопределить
+
 // #define MENU_SELECTED_H 10 // высота элемента меню
 // #define MENU_PARAMS_LEFT_OFFSET 92 // смещение вправо для рендеринга значений
 // #define MENU_PAGE_ITEMS_COUNT 6 // Количесвто элементов меню на одной странице
 // #define MENU_FAST_K 4 // коэффициент для ускоренного приращения (см. isFast ниже)
+
+#include <GyverOLED.h>
+#include "GyverOLEDMenu.h"
 
 GyverOLED<SSH1106_128x64> oled;
 OledMenu<9, GyverOLED<SSH1106_128x64>> menu(&oled); // Где 9 - количество элементов в меню
@@ -80,7 +81,7 @@ boolean menu.isMenuShowing; // Показано ли сейчас меню
 byte menu.currentPage = 1; // Текущая страница
 
 /*
-  addItem
+  ✔️ addItem
   Последовательное конфигурирование элементов меню в массиве 
 */
 void menu.addItem(PGM_P str); // Добавит экшен (просто кликабельный item)
@@ -92,41 +93,42 @@ void menu.addItem(PGM_P str, const byte* inc, byte* val, const byte* min, const 
 void menu.addItem(PGM_P str, boolean* val);
 
 /*
-  showMenu
+  ✔️ showMenu
   Показать / скрыть меню  (val - true/false)
   update - вызовет обновление oled дисплея после готовности к отрисовке меню
 */
 void menu.showMenu(boolean val, boolean update = true);
 
 /*
-  refresh
+  ✔️ refresh
   Текущая страница меню заново будет отрисована
 */
 void menu.refresh();
 
 /*
-  pageCount
+  ✔️ pageCount
   Возвращает количество страниц 
 */
-byte pageCount(); 
+byte menu.pageCount(); 
 
 // ===== КУРСОР =====
 
 /*
-  selectNext
+  ✔️ selectNext
   Переместит курсор на следующий item. В режиме редактирования этот метод сделает
   инкремент значения, где isFast = true, увеличит инкремент в 4 раза (#define MENU_FAST_K 4)
 */
 void menu.selectNext(boolean isFast = false);
 
 /*
-  selectPrev
+  ✔️ selectPrev
   Переместит курсор на предидущий item. В режиме редактирования этот метод сделает
   декремент значения, где isFast = true, увеличит декремент в 4 раза (#define MENU_FAST_K 4)
 */
 void menu.selectPrev(boolean isFast = false)
 
 /*
+  ️✔️ toggleChangeSelected
   Циклично переключает выделенный элемент в режим редактирования / выход из режима редактирования
 */
 void menu.toggleChangeSelected();
@@ -135,8 +137,14 @@ void menu.toggleChangeSelected();
 // ===== CALLBACK =====
 
 /*
-  cbOnChange
-  Колбек вызывается всякий раз когда происходит выход из режима редактирования
+  ✔️ onChange
+  cb - [ typedef void (*cbOnChange)(const int index, const void* val, const byte valType) ]
+  immediate - отвечает за то, когда будет вызван колбек.
+    если immediate == false, то колбэк будет вызван после выхода из режима редактирования параметра,
+    иначе любое изменение приведёт к вызову колбека
+  
+  
+  Колбек `cb` вызывается всякий раз, когда происходит выход из режима редактирования
   или непосредсвтенно при изменении значения
 
   index - текущий индекс меню в массиве. Первый элемент меню будет с индексом - 0
@@ -150,18 +158,21 @@ void menu.toggleChangeSelected();
     #define VAL_BOOLEAN 5
     #define VAL_U_INTEGER 6
 */
-typedef void (*cbOnChange)(int index, void* val, int valType);
+
+void onChange(cbOnChange cb, const boolean immediate = false);
 
 /*
-  Добавление колбэка
-
-  cb - вызываемый метод
-  immediate - отвечает за то, когда будет вызван колбек.
-    если immediate == false, то колбэк будет вызван после выхода из режима редактирования параметра,
-    иначе любое изменение приведёт к вызову колбека
+  ✔️ onPrintOverride
+  cb - [ typedef boolean (*cbOnPrintOverride)(const int index, const void* val, const byte valType) ]
   
+  Колбек `cb`(cbOnPrintOverride) вызывается всякий раз, когда должен происходить oled.print(...) для значений. 
+  Если колбэк вернёт false, то либа "сама напечатает" значение [ oled.print(*(type)val) ],
+  иначе вы сами должны вызывать oled.print(...) в данный момент веремени в колбэке.
+  
+  index, val и valType - такие же как и в [ typedef void (*cbOnChange) ]. См. выше.
 */
-void onChange(cbOnChange cb, boolean immediate = false);
+
+void onPrintOverride(cbOnPrintOverride cb);
 
 ```
 
@@ -185,7 +196,7 @@ int d_d = 50;
 byte tt11 = 10;
 float tt1 = 0.5;
 boolean lgh = false;
-int tt3 = 1000;
+int tt3 = 5;
 int tt4 = 1000;
 
 void setup() {
@@ -195,6 +206,7 @@ void setup() {
   oled.update();
 
   menu.onChange(onItemChange, true);
+  menu.onPrintOverride(onItemPrintOverride); // если нужно сделать своё форматирование значений
 
   menu.addItem(PSTR("<- ВЫХОД")); // 0
   menu.addItem(PSTR("КОЭФ. P"), GM_N_INT(1), &d_p, GM_N_INT(0), GM_N_INT(100));
@@ -205,7 +217,7 @@ void setup() {
 
   menu.addItem(PSTR("ПОДСВЕТКА"), &lgh); // page 2
   menu.addItem(PSTR("TIMER 3"), GM_N_INT(1), &tt3, GM_N_INT(1), GM_N_INT(5));
-  menu.addItem(PSTR("TIMER 4"), GM_N_INT(1), &tt4, GM_N_INT(0), GM_N_INT(10));
+  menu.addItem(PSTR("TIMER 4"), GM_N_INT(5), &tt4, GM_N_INT(0), GM_N_INT(1000)); // 8
 
   menu.showMenu(true);
 
@@ -213,12 +225,38 @@ void setup() {
   eb.attach(cb);
 }
 
-void onItemChange(int index, void* val, byte valType) {
+void onItemChange(const int index, const void* val, const byte valType) {
   if (valType == VAL_ACTION) {
     if (index == 0) {
       menu.showMenu(false);
     }
   }
+}
+
+boolean onItemPrintOverride(const int index, const void* val, const byte valType) {
+  // Допустим, что `TIMER 4`(index 8) - это минуты, которые мы можем менять. Отформатируем минуты по формату - `hh:mm`
+  if (index == 8) {
+    unsigned int hours = tt4 / 60; // [hh]
+    byte minutes = tt4 - (hours * 60); // [mm]
+
+    // отображаем нужном нам формате:
+
+    if (hours < 10) {
+      oled.print(0);
+    }
+    oled.print(hours);
+    oled.print(":");
+    
+    if (minutes < 10) {
+      oled.print(0);
+    }    
+    oled.print(minutes);
+
+    return true; // сигнализируем, что мы сами вызываем метод oled.print(...) с нужным нам форматированием
+  }
+  
+  // возвращаем всегда `false`, если мы не собираемся для других пунктов меню принтить значение
+  return false;
 }
 
 
@@ -249,6 +287,7 @@ void loop() {
 ## Версии
 - v0.1.0 (28.10.2023) - Первая стабильная версия
 - v0.2.0 (03.11.2023) - Добавлено цикличное перемещение курсора "по кругу". При достижении конца, при попытке пролистнуть дальше, будет отрисована первая страница и наоборот. При скрытии меню, режим отрисовки текста устанавливается на дефолтный.
+- v0.3.0 (04.11.2023) - Добавлена возможность форматирования изменяемых значений (см. обновленный пример - `onItemPrintOverride`) + небольшой рефакторинг кода.
 
 <a id="feedback"></a>
 ## Баги и обратная связь
