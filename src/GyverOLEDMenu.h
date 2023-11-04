@@ -15,6 +15,9 @@
 #define VAL_BOOLEAN 5
 #define VAL_U_INTEGER 6
 
+#define MENU_IP_PRINT 0
+#define MENU_IP_INC 1
+#define MENU_IP_DEC 2
 
 #ifndef MENU_SELECTED_H
 #define MENU_SELECTED_H 10
@@ -38,7 +41,8 @@
 #endif
 
 
-typedef void (*cbOnChange)(int index, void* val, byte valType);
+typedef void (*cbOnChange)(const int index, const void* val, const byte valType);
+typedef boolean (*cbOnPrintOverride)(const int index, const void* val, const byte valType);
 
 const char* MENU_BOOLEAN_TEXT[]  = { "Off", "On" };
 
@@ -50,26 +54,26 @@ public:
 
   OledMenuItem() {}
 
-  void setParams(const void* str, const void* inc, void* val, byte valType) {
+  void setParams(const void* str, const void* inc, void* val, const byte valType) {
     _str = str;
     _valType = valType;
     _inc = inc;
     _val = val;
   }
 
-  void setPosition(int x, int y) {
+  void setPosition(const int x, const int y) {
     _x = x;
     _y = y;
     _y1 = _y + MENU_SELECTED_H;
     _text_y = _y + MENU_ITEM_PADDING_TOP;
   }
 
-  void setOledInstance(TGyverOLED* oled, int index) {
+  void setOledInstance(TGyverOLED* oled, const int index) {
     _index = index;
     _oled = oled;
   }
 
-  void drawItem(boolean update = false) {
+  void drawItem(const boolean update = false) {
     _oled->rect(_x, _y, MENU_ITEM_SELECT_W, _y1, (isSelect && !isChange) ? OLED_FILL : OLED_CLEAR);
 
     if (isChange) {
@@ -88,22 +92,22 @@ public:
 
       switch (_valType) {
         case VAL_INTEGER:
-          _oled->print(*(int*)_val);
+          internalPrint<int>(MENU_IP_PRINT);
           break;
         case VAL_U_INTEGER:
-          _oled->print(*(unsigned int*)_val);
+          internalPrint<unsigned int>(MENU_IP_PRINT);
           break;
         case VAL_BYTE:
-          _oled->print(*(byte*)_val);
+          internalPrint<byte>(MENU_IP_PRINT);
           break;
         case VAL_FLOAT:
-          _oled->print(*(float*)_val);
+          internalPrint<float>(MENU_IP_PRINT);
           break;
         case VAL_DOUBLE:
-          _oled->print(*(double*)_val);
+          internalPrint<double>(MENU_IP_PRINT);
           break;
         case VAL_BOOLEAN:
-          _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
+          printBoolean();
           break;
       }
     }
@@ -112,13 +116,13 @@ public:
     }
   }
 
-  void unselect(boolean update = false) {
+  void unselect(const boolean update = false) {
     isSelect = false;
 
     drawItem(update);
   }
 
-  void select(boolean update = false) {
+  void select(const boolean update = false) {
     isSelect = true;
 
     drawItem(update);
@@ -145,7 +149,7 @@ public:
     _max = max;
   }
 
-  void increment(boolean isFast = false) {
+  void increment(const boolean isFast = false) {
     if (_valType == VAL_ACTION) {
       return;
     }
@@ -154,32 +158,27 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-        *(int*)_val = constrain(*(int*)_val + (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc), *(int*)_min, *(int*)_max);
-        _oled->print(*(int*)_val);
+        internalPrint<int>(MENU_IP_INC, isFast);
         break;
 
       case VAL_U_INTEGER:
-        *(unsigned int*)_val = constrain(*(unsigned int*)_val + (isFast ? ((*(unsigned int*)_inc) * MENU_FAST_K) : *(unsigned int*)_inc), *(unsigned int*)_min, *(unsigned int*)_max);
-        _oled->print(*(unsigned int*)_val);
+        internalPrint<unsigned int>(MENU_IP_INC, isFast);
         break;
 
       case VAL_BYTE:
-        *(byte*)_val = constrain(*(byte*)_val + (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc), *(byte*)_min, *(byte*)_max);
-        _oled->print(*(byte*)_val);
+        internalPrint<byte>(MENU_IP_INC, isFast);
         break;
 
       case VAL_DOUBLE:
-        *(double*)_val = constrain(*(double*)_val + (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc), *(double*)_min, *(double*)_max);
-        _oled->print(*(double*)_val);
+        internalPrint<double>(MENU_IP_INC, isFast);
         break;
 
       case VAL_FLOAT:
-        *(float*)_val = constrain(*(float*)_val + (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc), *(float*)_min, *(float*)_max);
-        _oled->print(*(float*)_val);
+        internalPrint<float>(MENU_IP_INC, isFast);
         break;
+
       case VAL_BOOLEAN:
-        *(boolean*)_val = !*(boolean*)_val;
-        _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
+        printBoolean(MENU_IP_DEC);
         break;
     }
 
@@ -190,7 +189,7 @@ public:
     }
   }
 
-  void decrement(boolean isFast = false) {
+  void decrement(const boolean isFast = false) {
     if (_valType == VAL_ACTION) {
       return;
     }
@@ -199,33 +198,27 @@ public:
 
     switch (_valType) {
       case VAL_INTEGER:
-        *(int*)_val = constrain(*(int*)_val - (isFast ? ((*(int*)_inc) * MENU_FAST_K) : *(int*)_inc), *(int*)_min, *(int*)_max);
-        _oled->print(*(int*)_val);
+        internalPrint<int>(MENU_IP_DEC, isFast);
         break;
 
       case VAL_U_INTEGER:
-        *(unsigned int*)_val = constrain(*(unsigned int*)_val - (isFast ? ((*(unsigned int*)_inc) * MENU_FAST_K) : *(unsigned int*)_inc), *(unsigned int*)_min, *(unsigned int*)_max);
-        _oled->print(*(unsigned int*)_val);
+        internalPrint<unsigned int>(MENU_IP_DEC, isFast);
         break;
 
       case VAL_BYTE:
-        *(byte*)_val = constrain(*(byte*)_val - (isFast ? ((*(byte*)_inc) * MENU_FAST_K) : *(byte*)_inc), *(byte*)_min, *(byte*)_max);
-        _oled->print(*(byte*)_val);
+        internalPrint<byte>(MENU_IP_DEC, isFast);
         break;
 
       case VAL_DOUBLE:
-        *(double*)_val = constrain(*(double*)_val - (isFast ? ((*(double*)_inc) * MENU_FAST_K) : *(double*)_inc), *(double*)_min, *(double*)_max);
-        _oled->print(*(double*)_val);
+        internalPrint<double>(MENU_IP_DEC, isFast);
         break;
 
       case VAL_FLOAT:
-        *(float*)_val = constrain(*(float*)_val - (isFast ? ((*(float*)_inc) * MENU_FAST_K) : *(float*)_inc), *(float*)_min, *(float*)_max);
-        _oled->print(*(float*)_val);
+        internalPrint<float>(MENU_IP_DEC, isFast);
         break;
 
       case VAL_BOOLEAN:
-        *(boolean*)_val = !*(boolean*)_val;
-        _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
+        printBoolean(MENU_IP_INC);
         break;
     }
 
@@ -236,9 +229,36 @@ public:
     }
   }
 
-  void onChange(cbOnChange cb, boolean immediate = false) {
+  template<typename T>
+  void internalPrint(const byte mode, const boolean isFast = false) {
+    if (mode == MENU_IP_INC) {
+      *(T*)_val = constrain(*(T*)_val + (isFast ? ((*(T*)_inc) * MENU_FAST_K) : *(T*)_inc), *(T*)_min, *(T*)_max);
+    } else if (mode == MENU_IP_DEC) {
+      *(T*)_val = constrain(*(T*)_val - (isFast ? ((*(T*)_inc) * MENU_FAST_K) : *(T*)_inc), *(T*)_min, *(T*)_max);
+    }
+
+    if (!callPrintOverride()) {
+      _oled->print(*(T*)_val);
+    }
+  }
+
+  void printBoolean(const byte mode = MENU_IP_PRINT) {
+    if (mode != MENU_IP_PRINT) {
+      *(boolean*)_val = !*(boolean*)_val;
+    }
+
+    if (!callPrintOverride()) {
+      _oled->print(MENU_BOOLEAN_TEXT[*(boolean*)_val]);
+    }
+  }
+
+  void onChange(cbOnChange cb, const boolean immediate = false) {
     _onChange = cb;
     cbImmediate = immediate;
+  }
+
+  void onPrintOverride(cbOnPrintOverride cb) {
+    _onPrintOverride = cb;
   }
 
   void callCb() {
@@ -247,6 +267,14 @@ public:
     }
 
     _onChange(_index, _val, _valType);
+  }
+
+  boolean callPrintOverride() {
+    if (_onPrintOverride == nullptr) {
+      return false;
+    }
+
+    return _onPrintOverride(_index, _val, _valType);
   }
 
 private:
@@ -263,6 +291,7 @@ private:
   const void* _max = nullptr;
   void* _val = nullptr;
   cbOnChange _onChange = nullptr;
+  cbOnPrintOverride _onPrintOverride = nullptr;
   boolean cbImmediate = false;
 
   void prepareValUpdate() {
@@ -317,7 +346,7 @@ public:
   }
 
 
-  void selectNext(boolean isFast = false) {
+  void selectNext(const boolean isFast = false) {
     if (!isMenuShowing) {
       return;
     }
@@ -337,7 +366,7 @@ public:
   }
 
 
-  void selectPrev(boolean isFast = false) {
+  void selectPrev(const boolean isFast = false) {
     if (!isMenuShowing) {
       return;
     }
@@ -370,12 +399,16 @@ public:
     oledMenuItems[selectedIdx].toggleChange();
   }
 
-  void onChange(cbOnChange cb, boolean immediate = false) {
+  void onChange(cbOnChange cb, const boolean immediate = false) {
     _onItemChange = cb;
     cbImmediate = immediate;
   }
 
-  void showMenu(boolean val, boolean update = true) {
+  void onPrintOverride(cbOnPrintOverride cb) {
+    _onItemPrintOverride = cb;
+  }
+
+  void showMenu(const boolean val, const boolean update = true) {
     if (val == isMenuShowing) {
       return;
     }
@@ -407,6 +440,7 @@ private:
   int initInterator = 0;
   OledMenuItem<TGyverOLED> oledMenuItems[_MS_SIZE];
   cbOnChange _onItemChange = nullptr;
+  cbOnPrintOverride _onItemPrintOverride = nullptr;
 
   int getSelectedItemIndex() {
     for (int i = 0; i < _MS_SIZE; i++) {
@@ -436,20 +470,13 @@ private:
     oledMenuItems[initInterator].setOledInstance(_oled, initInterator);
     oledMenuItems[initInterator].setParams(str, inc, val, valType);
     oledMenuItems[initInterator].onChange(_onItemChange, cbImmediate);
+    oledMenuItems[initInterator].onPrintOverride(_onItemPrintOverride);
     oledMenuItems[initInterator].setMinMax(min, max);
 
     initInterator++;
   }
 
-  boolean indexInCurrentPage(int index) {
-    int maxIndexInPage = (currentPage * MENU_PAGE_ITEMS_COUNT) - 1;
-    int minIndexInPage = maxIndexInPage - (MENU_PAGE_ITEMS_COUNT - 1);
-
-    return index >= minIndexInPage && index <= maxIndexInPage;
-  }
-
-  void renderPage(byte page, boolean firstSelect = true) {
-
+  void renderPage(const byte page, const boolean firstSelect = true) {
     if (page < 1) {
       return;
     }
@@ -486,7 +513,7 @@ private:
     _oled->update();
   }
 
-  void gotoIndex(byte selectedIdx, int nextIdx) {
+  void gotoIndex(const byte selectedIdx, int nextIdx) {
     byte nextIndexPage = 0;
     boolean isFirstSelect = true;
 
@@ -517,7 +544,7 @@ private:
     oledMenuItems[nextIdx].select(true);
   }
 
-  byte getPageByIndex(byte index) {
+  byte getPageByIndex(const byte index) {
         // ((index + 1) + MENU_PAGE_ITEMS_COUNT - 1) - one(1) was cut
     return (index + MENU_PAGE_ITEMS_COUNT) / MENU_PAGE_ITEMS_COUNT;
   }

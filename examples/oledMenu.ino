@@ -15,7 +15,7 @@ int d_d = 50;
 byte tt11 = 10;
 float tt1 = 0.5;
 boolean lgh = false;
-int tt3 = 1000;
+int tt3 = 5;
 int tt4 = 1000;
 
 void setup() {
@@ -25,6 +25,7 @@ void setup() {
   oled.update();
 
   menu.onChange(onItemChange, true);
+  menu.onPrintOverride(onItemPrintOverride); // если нужно сделать своё форматирование значений
 
   menu.addItem(PSTR("<- ВЫХОД")); // 0
   menu.addItem(PSTR("КОЭФ. P"), GM_N_INT(1), &d_p, GM_N_INT(0), GM_N_INT(100));
@@ -35,7 +36,7 @@ void setup() {
 
   menu.addItem(PSTR("ПОДСВЕТКА"), &lgh); // page 2
   menu.addItem(PSTR("TIMER 3"), GM_N_INT(1), &tt3, GM_N_INT(1), GM_N_INT(5));
-  menu.addItem(PSTR("TIMER 4"), GM_N_INT(1), &tt4, GM_N_INT(0), GM_N_INT(10));
+  menu.addItem(PSTR("TIMER 4"), GM_N_INT(5), &tt4, GM_N_INT(0), GM_N_INT(1000)); // 8
 
   menu.showMenu(true);
 
@@ -43,12 +44,38 @@ void setup() {
   eb.attach(cb);
 }
 
-void onItemChange(int index, void* val, byte valType) {
+void onItemChange(const int index, const void* val, const byte valType) {
   if (valType == VAL_ACTION) {
     if (index == 0) {
       menu.showMenu(false);
     }
   }
+}
+
+boolean onItemPrintOverride(const int index, const void* val, const byte valType) {
+  // Допустим, что `TIMER 4`(index 8) - это минуты, которые мы можем менять. Отформатируем минуты по формату - `hh:mm`
+  if (index == 8) {
+    unsigned int hours = tt4 / 60; // [hh]
+    byte minutes = tt4 - (hours * 60); // [mm]
+
+    // отображаем нужном нам формате:
+
+    if (hours < 10) {
+      oled.print(0);
+    }
+    oled.print(hours);
+    oled.print(":");
+    
+    if (minutes < 10) {
+      oled.print(0);
+    }    
+    oled.print(minutes);
+
+    return true; // сигнализируем, что мы сами вызываем метод oled.print(...) с нужным нам форматированием
+  }
+  
+  // возвращаем всегда `false`, если мы не собираемся для других пунктов меню принтить значение
+  return false;
 }
 
 
