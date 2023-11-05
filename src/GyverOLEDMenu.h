@@ -231,10 +231,22 @@ public:
 
   template<typename T>
   void internalPrint(const byte mode, const boolean isFast = false) {
-    if (mode == MENU_IP_INC) {
-      *(T*)_val = constrain(*(T*)_val + (isFast ? ((*(T*)_inc) * MENU_FAST_K) : *(T*)_inc), *(T*)_min, *(T*)_max);
-    } else if (mode == MENU_IP_DEC) {
-      *(T*)_val = constrain(*(T*)_val - (isFast ? ((*(T*)_inc) * MENU_FAST_K) : *(T*)_inc), *(T*)_min, *(T*)_max);
+    float nextVal = 0;
+
+    if (mode != MENU_IP_PRINT) {
+      if (mode == MENU_IP_INC) {
+        nextVal = (float)*(T*)_val + (isFast ? ((*(T*)_inc) * MENU_FAST_K) : *(T*)_inc);
+      } else if (mode == MENU_IP_DEC) {
+        nextVal = (float)*(T*)_val - (isFast ? ((*(T*)_inc) * MENU_FAST_K) : *(T*)_inc);
+      }
+
+      if (nextVal > *(T*)_max) {
+        *(T*)_val = *(T*)_min;
+      } else if (nextVal < *(T*)_min) {
+        *(T*)_val = *(T*)_max;
+      } else {
+        *(T*)_val = (T)nextVal;
+      }
     }
 
     if (!callPrintOverride()) {
